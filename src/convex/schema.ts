@@ -16,6 +16,42 @@ export const roleValidator = v.union(
 );
 export type Role = Infer<typeof roleValidator>;
 
+// Todo priority levels
+export const PRIORITIES = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  URGENT: "urgent",
+} as const;
+
+export const priorityValidator = v.union(
+  v.literal(PRIORITIES.LOW),
+  v.literal(PRIORITIES.MEDIUM),
+  v.literal(PRIORITIES.HIGH),
+  v.literal(PRIORITIES.URGENT),
+);
+export type Priority = Infer<typeof priorityValidator>;
+
+// Todo categories
+export const CATEGORIES = {
+  PERSONAL: "personal",
+  WORK: "work",
+  SHOPPING: "shopping",
+  HEALTH: "health",
+  LEARNING: "learning",
+  OTHER: "other",
+} as const;
+
+export const categoryValidator = v.union(
+  v.literal(CATEGORIES.PERSONAL),
+  v.literal(CATEGORIES.WORK),
+  v.literal(CATEGORIES.SHOPPING),
+  v.literal(CATEGORIES.HEALTH),
+  v.literal(CATEGORIES.LEARNING),
+  v.literal(CATEGORIES.OTHER),
+);
+export type Category = Infer<typeof categoryValidator>;
+
 const schema = defineSchema(
   {
     // default auth tables using convex auth.
@@ -32,12 +68,22 @@ const schema = defineSchema(
       role: v.optional(roleValidator), // role of the user. do not remove
     }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // add other tables here
-
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    // Todos table
+    todos: defineTable({
+      userId: v.id("users"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      completed: v.boolean(),
+      priority: priorityValidator,
+      category: categoryValidator,
+      dueDate: v.optional(v.number()),
+      completedAt: v.optional(v.number()),
+      tags: v.optional(v.array(v.string())),
+    })
+      .index("by_user", ["userId"])
+      .index("by_user_and_completed", ["userId", "completed"])
+      .index("by_user_and_category", ["userId", "category"])
+      .index("by_user_and_priority", ["userId", "priority"]),
   },
   {
     schemaValidation: false,
